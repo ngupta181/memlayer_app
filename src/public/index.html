@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MemLayer - Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 i {
+            color: #667eea;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: transform 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.secondary {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+        }
+
+        .nav-btn.danger {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: calc(100vh - 200px);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .tab-btn {
+            background: #e2e8f0;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .tab-btn.active {
+            background: #667eea;
+            color: #fff;
+        }
+        
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        #graphContainer {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: #f7fafc;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #graphContainer canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        #graphContainer .loading,
+        #graphContainer .error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        #graphContainer .loading {
+            background: #e6fffa;
+            color: #2c7a7b;
+            border: 2px solid #81e6d9;
+        }
+
+        #graphContainer .error {
+            background: #fed7d7;
+            color: #c53030;
+            border: 2px solid #fc8181;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+        }
+
+        .bulk-actions-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .bulk-actions-section h3 {
+            margin-bottom: 15px;
+            color: #4a5568;
+            font-size: 16px;
+        }
+
+        .bulk-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .bulk-controls .btn {
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+
+        .bulk-filters .btn {
+            font-size: 12px;
+            padding: 8px 12px;
+            width: 100%;
+        }
+
+        .memory-card.selected {
+            border-left-color: #e53e3e;
+            background: #fed7d7;
+        }
+
+        .memory-checkbox {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            transform: scale(1.2);
+        }
+
+        .search-section {
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .search-input input {
+            flex: 1;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .content-area {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+
+        .memory-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .memory-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .memory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .memory-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .memory-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .memory-content {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .memory-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .memory-actions button {
+            background: #e2e8f0;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .memory-actions button:hover {
+            background: #cbd5e0;
+        }
+
+        .loading {
+            text-align: center;
+            color: #718096;
+            padding: 40px;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            background: #e2e8f0;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .pagination button:hover {
+            background: #cbd5e0;
+        }
+
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-brain"></i> MemLayer Dashboard</h1>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="profile.html" class="nav-btn secondary"><i class="fas fa-user-cog"></i> Profile</a>
+                <button class="nav-btn danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <h3 id="totalMemories">-</h3>
+                    <p>Total Memories</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="avgImportance">-</h3>
+                    <p>Avg Importance</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="recentActivity">-</h3>
+                    <p>Recent Activity</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="storageUsage">-</h3>
+                    <p>Storage Usage</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <h3><i class="fas fa-plus"></i> Add Memory</h3>
+                <form id="memoryForm">
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" id="title" placeholder="Memory title (optional)">
+                    </div>
+                    <div class="form-group">
+                        <label for="content">Content *</label>
+                        <textarea id="content" placeholder="Enter your memory content..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="type">Type</label>
+                        <select id="type">
+                            <option value="note">Note</option>
+                            <option value="task">Task</option>
+                            <option value="idea">Idea</option>
+                            <option value="code">Code</option>
+                            <option value="link">Link</option>
+                            <option value="snippet">Snippet</option>
+                            <option value="document">Document</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="tags">Tags</label>
+                        <input type="text" id="tags" placeholder="tag1, tag2, tag3">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <input type="text" id="category" placeholder="Category (optional)">
+                    </div>
+                    <div class="form-group">
+                        <label for="folder">Folder</label>
+                        <input type="text" id="folder" placeholder="Folder path (optional)">
+                    </div>
+                    <div class="form-group">
+                        <label for="importance">Importance</label>
+                        <select id="importance">
+                            <option value="1">1 - Low</option>
+                            <option value="2" selected>2 - Normal</option>
+                            <option value="3">3 - Medium</option>
+                            <option value="4">4 - High</option>
+                            <option value="5">5 - Critical</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Save Memory</button>
+                </form>
+
+                <div class="search-section">
+                    <h3><i class="fas fa-search"></i> Search</h3>
+                    <div class="search-input">
+                        <input type="text" id="searchQuery" placeholder="Search memories...">
+                        <button class="btn btn-secondary" onclick="searchMemories()">Search</button>
+                    </div>
+                    <div class="filters">
+                        <select id="filterType">
+                            <option value="">All Types</option>
+                            <option value="note">Note</option>
+                            <option value="task">Task</option>
+                            <option value="idea">Idea</option>
+                            <option value="code">Code</option>
+                            <option value="link">Link</option>
+                            <option value="snippet">Snippet</option>
+                            <option value="document">Document</option>
+                        </select>
+                        <select id="filterImportance">
+                            <option value="">All Importance</option>
+                            <option value="1">Low (1)</option>
+                            <option value="2">Normal (2)</option>
+                            <option value="3">Medium (3)</option>
+                            <option value="4">High (4)</option>
+                            <option value="5">Critical (5)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bulk-actions-section">
+                    <h3><i class="fas fa-trash-alt"></i> Bulk Actions</h3>
+                    <div class="bulk-controls">
+                        <button class="btn btn-danger" onclick="selectAllMemories()">Select All</button>
+                        <button class="btn btn-danger" onclick="deselectAllMemories()">Deselect All</button>
+                        <button class="btn btn-danger" onclick="removeSelectedMemories()">Remove Selected</button>
+                    </div>
+                    <div class="bulk-filters">
+                        <button class="btn btn-danger" onclick="bulkRemoveByFilters()">Remove by Filters</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="tabs">
+                    <button class="tab-btn active" id="tabListBtn" onclick="showTab('list')"><i class="fas fa-list"></i> List</button>
+                    <button class="tab-btn" id="tabGraphBtn" onclick="showTab('graph')"><i class="fas fa-project-diagram"></i> Graph</button>
+                </div>
+                <div id="tabList" class="tab-panel active">
+                <div id="memoriesList">
+                    <div class="loading">Loading memories...</div>
+                </div>
+                <div id="pagination" class="pagination"></div>
+            </div>
+                <div id="tabGraph" class="tab-panel">
+                    <div style="display:flex; gap:10px; margin-bottom:10px;">
+                        <select id="graphLayout">
+                            <option value="cose">CoSE</option>
+                            <option value="circular">Circular</option>
+                            <option value="breadthfirst">Breadthfirst</option>
+                            <option value="grid">Grid</option>
+                        </select>
+                        <button class="btn btn-secondary" style="width:auto" onclick="loadGraph()">Reload Graph</button>
+                    </div>
+                    <div id="graphContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let API_KEY = '';
+        const API_BASE = '/memory';
+        const REL_BASE = '/relations';
+        let selectedMemories = new Set();
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, checking Cytoscape availability:', typeof cytoscape);
+            checkAuth();
+        });
+
+        function checkAuth() {
+            const storedToken = localStorage.getItem('memlayer_session_token');
+            if (storedToken) {
+                API_KEY = storedToken; // Use session token as API_KEY for backward compatibility
+                loadStats();
+                loadMemories();
+                setupEventListeners();
+            } else {
+                // Redirect to login if no session token
+                window.location.href = 'login.html';
+            }
+        }
+
+        function logout() {
+            // Call logout endpoint to invalidate session
+            fetch('/users/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${API_KEY}`
+                }
+            }).catch(error => {
+                console.error('Logout error:', error);
+            }).finally(() => {
+                // Clear local storage and redirect
+                localStorage.removeItem('memlayer_session_token');
+                localStorage.removeItem('memlayer_user_info');
+                window.location.href = 'login.html';
+            });
+        }
+
+        function showTab(name) {
+            const listBtn = document.getElementById('tabListBtn');
+            const graphBtn = document.getElementById('tabGraphBtn');
+            const listPanel = document.getElementById('tabList');
+            const graphPanel = document.getElementById('tabGraph');
+            
+            if (name === 'list') {
+                listBtn.classList.add('active');
+                graphBtn.classList.remove('active');
+                listPanel.classList.add('active');
+                graphPanel.classList.remove('active');
+            } else if (name === 'graph') {
+                listBtn.classList.remove('active');
+                graphBtn.classList.add('active');
+                listPanel.classList.remove('active');
+                graphPanel.classList.add('active');
+                setTimeout(() => { loadGraph(); }, 0);
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('memoryForm').addEventListener('submit', handleMemorySubmit);
+        }
+
+        async function handleMemorySubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                content: document.getElementById('content').value,
+                title: document.getElementById('title').value || undefined,
+                type: document.getElementById('type').value,
+                tags: document.getElementById('tags').value ? document.getElementById('tags').value.split(',').map(tag => tag.trim()) : [],
+                category: document.getElementById('category').value || undefined,
+                folder: document.getElementById('folder').value || undefined,
+                importance: parseInt(document.getElementById('importance').value)
+            };
+
+            try {
+                const response = await fetch(API_BASE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        showMessage('Authentication failed. Please check your API key configuration.', 'error');
+                    return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                showMessage('Memory saved successfully!', 'success');
+                
+                // Reset form
+                document.getElementById('memoryForm').reset();
+                
+                // Reload data
+                loadStats();
+                loadMemories();
+            } catch (error) {
+                console.error('Error saving memory:', error);
+                showMessage('Error saving memory. Please check your server connection.', 'error');
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        showMessage('Authentication failed. Please check your API key configuration.', 'error');
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const stats = await response.json();
+                
+                document.getElementById('totalMemories').textContent = stats.total_memories || 0;
+                document.getElementById('avgImportance').textContent = (stats.avg_importance || 0).toFixed(1);
+                document.getElementById('recentActivity').textContent = stats.recent_activity || 'None';
+                document.getElementById('storageUsage').textContent = stats.storage_usage || 'Unknown';
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                showMessage('Error loading statistics. Please check your server connection.', 'error');
+            }
+        }
+
+        async function loadMemories(page = 1) {
+            try {
+                const params = new URLSearchParams({
+                    page: page,
+                    limit: 10
+                });
+
+                const response = await fetch(`${API_BASE}?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        showMessage('Authentication failed. Please check your API key configuration.', 'error');
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.memories) {
+                    console.error('Invalid response format:', data);
+                    showMessage('Invalid response from server.', 'error');
+                    return;
+                }
+                
+                displayMemories(data.memories);
+                displayPagination(data.pagination);
+            } catch (error) {
+                console.error('Error loading memories:', error);
+                showMessage('Error loading memories. Please check your server connection.', 'error');
+            }
+        }
+
+        function displayMemories(memories) {
+            const container = document.getElementById('memoriesList');
+            
+            if (memories.length === 0) {
+                container.innerHTML = '<div class="loading">No memories found.</div>';
+                return;
+            }
+
+            const memoriesHtml = memories.map(memory => `
+                <div class="memory-card" data-id="${memory.id}">
+                    <input type="checkbox" class="memory-checkbox" onchange="toggleMemorySelection('${memory.id}', this)">
+                    <div class="memory-header">
+                        <div>
+                        <div class="memory-title">${memory.title || 'Untitled'}</div>
+                        <div class="memory-meta">
+                                <span><i class="fas fa-tag"></i> ${memory.type}</span>
+                                <span><i class="fas fa-star"></i> ${memory.importance}/5</span>
+                                <span><i class="fas fa-folder"></i> ${memory.category || 'None'}</span>
+                                <span><i class="fas fa-calendar"></i> ${new Date(memory.created_at).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="memory-content">${memory.content}</div>
+                        <div class="memory-actions">
+                        <button onclick="editMemory('${memory.id}')"><i class="fas fa-edit"></i> Edit</button>
+                        <button onclick="deleteMemory('${memory.id}')"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = memoriesHtml;
+        }
+
+        function displayPagination(pagination) {
+            const container = document.getElementById('pagination');
+            if (!pagination || pagination.pages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let paginationHtml = '';
+            
+            if (pagination.page > 1) {
+                paginationHtml += `<button onclick="loadMemories(${pagination.page - 1})">Previous</button>`;
+            }
+            
+            for (let i = 1; i <= pagination.pages; i++) {
+                if (i === pagination.page) {
+                    paginationHtml += `<button class="active">${i}</button>`;
+                } else {
+                    paginationHtml += `<button onclick="loadMemories(${i})">${i}</button>`;
+                }
+            }
+            
+            if (pagination.page < pagination.pages) {
+                paginationHtml += `<button onclick="loadMemories(${pagination.page + 1})">Next</button>`;
+            }
+            
+            container.innerHTML = paginationHtml;
+        }
+
+        function selectAllMemories() {
+            const checkboxes = document.querySelectorAll('.memory-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+                toggleMemorySelection(checkbox.value, checkbox);
+            });
+            showMessage('All memories selected', 'success');
+        }
+
+        function deselectAllMemories() {
+            const checkboxes = document.querySelectorAll('.memory-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                toggleMemorySelection(checkbox.value, checkbox);
+            });
+            selectedMemories.clear();
+            showMessage('Deselected all memories', 'success');
+        }
+
+        function toggleMemorySelection(memoryId, checkbox) {
+            if (checkbox.checked) {
+                selectedMemories.add(memoryId);
+                checkbox.closest('.memory-card').classList.add('selected');
+            } else {
+                selectedMemories.delete(memoryId);
+                checkbox.closest('.memory-card').classList.remove('selected');
+            }
+        }
+
+        async function removeSelectedMemories() {
+            if (selectedMemories.size === 0) {
+                showMessage('No memories selected for removal', 'error');
+                return;
+            }
+
+            const confirmMessage = `Are you sure you want to permanently delete ${selectedMemories.size} selected memories? This action cannot be undone.`;
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/remove`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        memory_ids: Array.from(selectedMemories),
+                        confirm: true
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    showMessage(`Error removing memories: ${errorData.detail || 'Unknown error'}`, 'error');
+                        return;
+                    }
+
+                const result = await response.json();
+                showMessage(`Successfully removed ${result.deleted_count} memories`, 'success');
+                selectedMemories.clear();
+                loadStats();
+                loadMemories();
+            } catch (error) {
+                console.error('Error removing memories:', error);
+                showMessage('Error removing memories. Please check your server connection.', 'error');
+            }
+        }
+
+        async function bulkRemoveByFilters() {
+            const type = document.getElementById('filterType').value;
+            const importance = document.getElementById('filterImportance').value;
+            const query = document.getElementById('searchQuery').value;
+
+            let filterDescription = 'all memories';
+            if (type) filterDescription += ` of type "${type}"`;
+            if (importance) filterDescription += ` with importance >= ${importance}`;
+            if (query) filterDescription += ` containing "${query}"`;
+
+            const confirmMessage = `Are you sure you want to permanently delete ${filterDescription}? This action cannot be undone.`;
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            try {
+                const payload = {
+                    confirm: true
+                };
+
+                if (type) payload.type = type;
+                if (importance) payload.min_importance = parseInt(importance);
+
+                const response = await fetch(`${API_BASE}/bulk`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    showMessage(`Error bulk removing memories: ${errorData.detail || 'Unknown error'}`, 'error');
+                    return;
+                }
+
+                const result = await response.json();
+                showMessage(`Successfully removed ${result.deleted_count} memories`, 'success');
+                loadStats();
+                loadMemories();
+            } catch (error) {
+                console.error('Error bulk removing memories:', error);
+                showMessage('Error bulk removing memories. Please check your server connection.', 'error');
+            }
+        }
+
+        async function searchMemories() {
+            const query = document.getElementById('searchQuery').value.trim();
+            const type = document.getElementById('filterType').value;
+            const importance = document.getElementById('filterImportance').value;
+
+            if (!query) {
+                loadMemories();
+                return;
+            }
+
+            try {
+                const params = new URLSearchParams({
+                    query: query,
+                    limit: 10
+                });
+
+                if (type) params.append('type', type);
+                if (importance) params.append('min_importance', importance);
+
+                const response = await fetch(`${API_BASE}/search?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        showMessage('Authentication failed. Please check your API key configuration.', 'error');
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (!data.memories) {
+                    console.error('Invalid response format:', data);
+                    showMessage('Invalid response from server.', 'error');
+                    return;
+                }
+                
+                displayMemories(data.memories);
+                document.getElementById('pagination').innerHTML = '';
+            } catch (error) {
+                console.error('Error searching memories:', error);
+                showMessage('Error searching memories. Please check your server connection.', 'error');
+            }
+        }
+
+        async function deleteMemory(memoryId) {
+            if (!confirm('Are you sure you want to delete this memory?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/${memoryId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        showMessage('Authentication failed. Please check your API key configuration.', 'error');
+                        return;
+                    }
+                    const errorData = await response.json();
+                    showMessage(`Error deleting memory: ${errorData.detail || 'Unknown error'}`, 'error');
+                    return;
+                }
+
+                showMessage('Memory deleted successfully!', 'success');
+                loadStats();
+                loadMemories();
+            } catch (error) {
+                console.error('Error deleting memory:', error);
+                showMessage('Error deleting memory. Please check your server connection.', 'error');
+            }
+        }
+
+        function editMemory(memoryId) {
+            // This would open an edit modal or navigate to edit page
+            alert('Edit functionality would be implemented here');
+        }
+
+        async function loadGraph() {
+            try {
+                const response = await fetch(`${REL_BASE}/graph?limit=50`, {
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const graphData = await response.json();
+                console.log('Graph data received:', graphData); // Debug log
+                
+                if (!graphData || !graphData.nodes) {
+                    console.warn('Invalid graph data structure:', graphData);
+                    document.getElementById('graphContainer').innerHTML = '<div class="loading">No graph data available</div>';
+                    return;
+                }
+                
+                if (graphData.nodes.length === 0) {
+                    document.getElementById('graphContainer').innerHTML = `
+                        <div class="loading">
+                            <p>No memories found to display in graph</p>
+                            <p>Create some memories first, then they will appear here</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                renderGraph(graphData);
+            } catch (error) {
+                console.error('Error loading graph:', error);
+                document.getElementById('graphContainer').innerHTML = `
+                    <div class="error">
+                        Error loading graph data: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function renderGraph(graphData) {
+            const container = document.getElementById('graphContainer');
+            
+            if (!graphData || !graphData.nodes || graphData.nodes.length === 0) {
+                container.innerHTML = '<div class="loading">No graph data available</div>';
+                return;
+            }
+
+            // Check if Cytoscape is available
+            if (typeof cytoscape === 'undefined') {
+                container.innerHTML = '<div class="error">Cytoscape library not loaded. Please refresh the page.</div>';
+                return;
+            }
+
+            try {
+                // Log the processed data for debugging
+                const processedNodes = graphData.nodes.map(node => ({
+                    data: { 
+                        id: node.id, 
+                        label: node.label || 'Untitled',
+                        type: node.data?.type || 'unknown',
+                        category: node.data?.category || 'general',
+                        importance: node.data?.importance || 1
+                    }
+                }));
+                
+                const processedEdges = graphData.edges.map(edge => ({
+                    data: { 
+                        id: edge.id,
+                        source: edge.source, 
+                        target: edge.target, 
+                        label: edge.type || 'relates_to',
+                        weight: edge.weight || 1
+                    }
+                }));
+                
+                console.log('Processed nodes for graph:', processedNodes);
+                console.log('Processed edges for graph:', processedEdges);
+                
+                const cy = cytoscape({
+                    container: container,
+                    elements: {
+                        nodes: processedNodes,
+                        edges: processedEdges
+                    },
+                    style: [
+                        {
+                            selector: 'node',
+                            style: {
+                                'background-color': '#4c51bf',
+                                'label': 'data(label)',
+                                'color': '#ffffff',
+                                'text-valign': 'center',
+                                'text-halign': 'center',
+                                'font-size': '11px',
+                                'font-weight': '600',
+                                'width': '80px',
+                                'height': '80px',
+                                'border-width': '3px',
+                                'border-color': '#2d3748',
+                                'text-wrap': 'wrap',
+                                'text-max-width': '70px',
+                                'text-outline-color': '#2d3748',
+                                'text-outline-width': '1px'
+                            }
+                        },
+                        {
+                            selector: 'edge',
+                            style: {
+                                'width': 3,
+                                'line-color': '#4a5568',
+                                'target-arrow-color': '#4a5568',
+                                'target-arrow-shape': 'triangle',
+                                'target-arrow-width': '8px',
+                                'curve-style': 'bezier',
+                                'label': 'data(label)',
+                                'font-size': '10px',
+                                'font-weight': '500',
+                                'color': '#2d3748',
+                                'text-background-color': '#f7fafc',
+                                'text-background-opacity': '0.8',
+                                'text-background-padding': '2px',
+                                'text-border-color': '#e2e8f0',
+                                'text-border-width': '1px'
+                            }
+                        }
+                    ],
+                    layout: {
+                        name: document.getElementById('graphLayout').value || 'cose',
+                        animate: true,
+                        animationDuration: 1000,
+                        padding: 50
+                    }
+                });
+
+                // Add some interactive features
+                cy.on('tap', 'node', function(evt) {
+                    const node = evt.target;
+                    console.log('Clicked node:', node.data());
+                });
+
+                cy.on('tap', 'edge', function(evt) {
+                    const edge = evt.target;
+                    console.log('Clicked edge:', edge.data());
+                });
+
+                console.log('Graph rendered successfully with', graphData.nodes.length, 'nodes and', graphData.edges.length, 'edges');
+
+            } catch (error) {
+                console.error('Error rendering graph:', error);
+                container.innerHTML = '<div class="error">Error rendering graph: ' + error.message + '</div>';
+            }
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(messageDiv, container.firstChild);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
+

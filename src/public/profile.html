@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MemLayer - Profile</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 i {
+            color: #667eea;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: transform 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.secondary {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+        }
+
+        .nav-btn.danger {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .profile-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-section h3 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .api-key-display {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            word-break: break-all;
+            position: relative;
+        }
+
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #5a67d8;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: transform 0.2s;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+        }
+
+        .user-info {
+            background: #e6fffa;
+            color: #2c7a7b;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .user-info h4 {
+            margin-bottom: 15px;
+            color: #2c7a7b;
+        }
+
+        .user-info p {
+            margin-bottom: 8px;
+        }
+
+        .warning {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h4 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #718096;
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-user-circle"></i> Profile & Settings</h1>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> Dashboard</a>
+                <button class="nav-btn danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- User Information & Stats -->
+            <div class="profile-section">
+                <h3><i class="fas fa-info-circle"></i> User Information</h3>
+                
+                <div id="userInfo" class="user-info">
+                    <h4><i class="fas fa-user"></i> Account Details</h4>
+                    <div id="userDetails">
+                        <div class="loading">Loading user information...</div>
+                    </div>
+                </div>
+
+                <div id="userStats">
+                    <h4><i class="fas fa-chart-bar"></i> Your Statistics</h4>
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-card">
+                            <h4 id="totalMemories">-</h4>
+                            <p>Total Memories</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4 id="avgImportance">-</h4>
+                            <p>Avg Importance</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4 id="recentActivity">-</h4>
+                            <p>Recent Activity</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4 id="storageUsage">-</h4>
+                            <p>Storage Usage</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings -->
+            <div class="profile-section">
+                <h3><i class="fas fa-key"></i> Security Settings</h3>
+                
+                <h4>Change Password</h4>
+                <p style="margin-bottom: 15px; color: #718096; font-size: 0.9rem;">
+                    Update your password to keep your account secure.
+                </p>
+                
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword" placeholder="Enter your current password">
+                </div>
+                
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" placeholder="Enter new password (min 6 characters)">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmNewPassword">Confirm New Password</label>
+                    <input type="password" id="confirmNewPassword" placeholder="Confirm new password">
+                </div>
+                
+                <button class="btn btn-secondary" onclick="changePassword()">
+                    <i class="fas fa-key"></i> Change Password
+                </button>
+                
+                <div id="passwordChangeResult"></div>
+
+                <div class="warning" style="margin-top: 20px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Security Note:</strong> Keep your password secure and never share it publicly.
+                </div>
+            </div>
+
+            <!-- API Key Management -->
+            <div class="profile-section">
+                <h3><i class="fas fa-code"></i> API Key Management</h3>
+                
+                <div class="info-box" style="background: #e6fffa; color: #2c7a7b; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>MCP Server Integration:</strong> Your API key is used by the MCP server for authentication. 
+                    Keep it secure and rotate it if needed.
+                </div>
+                
+                <div id="currentKeyInfo">
+                    <h4>Current API Key</h4>
+                    <div class="api-key-display">
+                        <span id="currentKeyDisplay">Loading...</span>
+                        <button class="copy-btn" onclick="copyCurrentKey()" style="position: absolute; top: 10px; right: 10px;">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Security Note:</strong> Keep your API key secure and never share it publicly.
+                </div>
+
+                <h4>Rotate API Key</h4>
+                <p style="margin-bottom: 15px; color: #718096; font-size: 0.9rem;">
+                    Generate a new API key. The old key will become invalid immediately.
+                    <strong>Note:</strong> You'll need to update your MCP server configuration after rotation.
+                </p>
+                
+                <button class="btn btn-danger" onclick="rotateApiKey()">
+                    <i class="fas fa-sync-alt"></i> Generate New API Key
+                </button>
+
+                <div id="rotationResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let API_KEY = '';
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+        });
+
+        function checkAuth() {
+            const storedToken = localStorage.getItem('memlayer_session_token');
+            if (storedToken) {
+                API_KEY = storedToken; // Use session token as API_KEY for backward compatibility
+                loadUserInfo();
+                loadUserStats();
+            } else {
+                // Redirect to login if no session token
+                window.location.href = 'login.html';
+            }
+        }
+
+        function logout() {
+            // Call logout endpoint to invalidate session
+            fetch('/users/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${API_KEY}`
+                }
+            }).catch(error => {
+                console.error('Logout error:', error);
+            }).finally(() => {
+                // Clear local storage and redirect
+                localStorage.removeItem('memlayer_session_token');
+                localStorage.removeItem('memlayer_user_info');
+                window.location.href = 'login.html';
+            });
+        }
+
+        async function loadUserInfo() {
+            const userDetailsDiv = document.getElementById('userDetails');
+            
+            try {
+                // Get user info from localStorage or make API call
+                const userInfo = localStorage.getItem('memlayer_user_info');
+                if (userInfo) {
+                    const user = JSON.parse(userInfo);
+                    userDetailsDiv.innerHTML = `
+                        <p><strong>Name:</strong> ${user.name || 'User'}</p>
+                        <p><strong>Last Login:</strong> ${new Date(user.lastLogin).toLocaleString()}</p>
+                        <p><strong>Status:</strong> <span style="color: #2f855a;">Active</span></p>
+                    `;
+                } else {
+                    userDetailsDiv.innerHTML = `
+                        <p><strong>Name:</strong> User</p>
+                        <p><strong>Status:</strong> <span style="color: #2f855a;">Active</span></p>
+                    `;
+                }
+
+                // Load current API key
+                await loadCurrentApiKey();
+                
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                userDetailsDiv.innerHTML = '<p style="color: #e53e3e;">Error loading user information</p>';
+            }
+        }
+
+        async function loadCurrentApiKey() {
+            try {
+                // Make API call to get current API key
+                const response = await fetch('/users/api-key', {
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                // Display the API key (truncated for security)
+                const apiKey = result.api_key;
+                const displayKey = apiKey ? `${apiKey.substring(0, 20)}...` : 'No API key found';
+                document.getElementById('currentKeyDisplay').textContent = displayKey;
+                
+            } catch (error) {
+                console.error('Error loading API key:', error);
+                document.getElementById('currentKeyDisplay').textContent = 'Error loading API key';
+            }
+        }
+
+        async function rotateApiKey() {
+            if (!confirm('Are you sure you want to rotate your API key? The old key will become invalid immediately and you\'ll need to update your MCP server configuration.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/users/rotate-key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    showMessage(`Key rotation failed: ${errorData.detail || 'Unknown error'}`, 'error');
+                    return;
+                }
+
+                const result = await response.json();
+                showRotationSuccess(result);
+                
+            } catch (error) {
+                console.error('Error rotating API key:', error);
+                showMessage('Error rotating API key. Please check your server connection.', 'error');
+            }
+        }
+
+        function showRotationSuccess(result) {
+            const resultDiv = document.getElementById('rotationResult');
+            resultDiv.innerHTML = `
+                <div class="success">
+                    <h4><i class="fas fa-check-circle"></i> API Key Rotated Successfully!</h4>
+                    <div class="api-key-display">
+                        <strong>New API Key:</strong><br>
+                        ${result.new_api_key}
+                        <button class="copy-btn" onclick="copyToClipboard('${result.new_api_key}')" style="position: absolute; top: 10px; right: 10px;">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                    <div class="warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Important:</strong> Copy this new API key now. The old one is no longer valid!
+                    </div>
+                    <div class="info-box" style="background: #e6fffa; color: #2c7a7b; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>MCP Server Update Required:</strong> Update your MCP server configuration with this new API key.
+                    </div>
+                </div>
+            `;
+            
+            // Update the current API key display
+            const currentKeyDisplay = document.getElementById('currentKeyDisplay');
+            currentKeyDisplay.textContent = `${result.new_api_key.substring(0, 20)}...`;
+        }
+
+        async function copyCurrentKey() {
+            try {
+                // Fetch the current API key
+                const response = await fetch('/users/api-key', {
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const apiKey = result.api_key;
+                
+                if (apiKey) {
+                    await copyToClipboard(apiKey);
+                    showMessage('API key copied to clipboard!', 'success');
+                } else {
+                    showMessage('No API key found', 'error');
+                }
+            } catch (error) {
+                console.error('Error copying API key:', error);
+                showMessage('Error copying API key', 'error');
+            }
+        }
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showMessage('API key copied to clipboard!', 'success');
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showMessage('API key copied to clipboard!', 'success');
+            }
+        }
+
+        async function loadUserStats() {
+            try {
+                const response = await fetch('/memory/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const stats = await response.json();
+                
+                document.getElementById('totalMemories').textContent = stats.total_memories || 0;
+                document.getElementById('avgImportance').textContent = (stats.avg_importance || 0).toFixed(1);
+                document.getElementById('recentActivity').textContent = stats.recent_activity || 'None';
+                document.getElementById('storageUsage').textContent = stats.storage_usage || 'Unknown';
+                
+            } catch (error) {
+                console.error('Error loading user stats:', error);
+                document.getElementById('statsGrid').innerHTML = '<p style="color: #e53e3e;">Error loading statistics</p>';
+            }
+        }
+
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmNewPassword) {
+                showMessage('Please fill in all password fields', 'error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showMessage('New password must be at least 6 characters long', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmNewPassword) {
+                showMessage('New passwords do not match', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/users/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    showMessage(`Password change failed: ${errorData.detail || 'Unknown error'}`, 'error');
+                    return;
+                }
+
+                const result = await response.json();
+                showPasswordChangeSuccess();
+                
+                // Clear the form
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmNewPassword').value = '';
+                
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showMessage('Error changing password. Please check your server connection.', 'error');
+            }
+        }
+
+        function showPasswordChangeSuccess() {
+            const resultDiv = document.getElementById('passwordChangeResult');
+            resultDiv.innerHTML = `
+                <div class="success">
+                    <h4><i class="fas fa-check-circle"></i> Password Changed Successfully!</h4>
+                    <p>Your password has been updated. You can now use your new password to sign in.</p>
+                </div>
+            `;
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(messageDiv, container.firstChild);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
